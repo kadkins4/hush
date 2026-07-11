@@ -7,7 +7,7 @@
 # paste the path printed below, and add it. (Microphone has no "+": it prompts
 # the first time you hold the key — just click Allow.)
 
-BIN="$(/Users/kendalladkins/Developer/hush/.venv/bin/python -c 'import os,sys;print(os.path.realpath(sys.executable))')"
+BIN="$("$HOME/Developer/hush/.venv/bin/python" -c 'import os,sys;print(os.path.realpath(sys.executable))')"
 
 echo "────────────────────────────────────────────────────────"
 echo "Grant these THREE permissions to this exact binary:"

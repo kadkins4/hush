@@ -9,3 +9,9 @@ __pycache__/
 # Editor / OS cruft
 *.bak
 .DS_Store
+
+# Local dev tooling
+.claude/
+
+# Personal, machine-local config (e.g. Obsidian log path) — never commit
+.obsidian_log_path
