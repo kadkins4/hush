@@ -102,22 +102,26 @@ def strip_preamble(text: str) -> str:
 
     t = text.strip()
 
-    # (1) Self-referential meta ending in a colon — the model narrating itself,
-    # possibly spanning a sentence or two before the colon. Requires the words
-    # 'transcript' or 'clean…' so we NEVER eat real speech like "Note to self:"
-    # or "Here's the thing:".
+    # (1) The model narrating itself before a colon, e.g. "Here is the cleaned
+    # transcript:" or "I'd be happy to help. Here's the cleaned-up transcript:".
+    # Require BOTH a meta-opener AND a self-reference ('transcript…'/'cleaned')
+    # so we NEVER eat real speech like "Here's the thing:" or "Cleanup steps:".
     m = re.match(
-        r"^.{0,180}?(transcript|clean\w*)\b.{0,40}?:\s*",
+        r"^(here('?s| is| are)?|this is|below is|sure|okay|ok|certainly|"
+        r"of course|i'd be (?:happy|glad)|i can help|i'll help)\b"
+        r".{0,120}?\b(?:transcript\w*|cleaned(?:[- ]?up)?)\b.{0,40}?:\s*",
         t,
         re.IGNORECASE | re.DOTALL,
     )
     if m:
         t = t[m.end():].strip()
 
-    # (2) A short leading acknowledgement line on its own, e.g. "Sure:" / "Okay:".
+    # (2) A BARE leading acknowledgement line on its own, e.g. "Sure:" / "Okay!".
+    # Must be the whole first line (no trailing content) so we don't eat real
+    # speech like "Okay, here's the plan:".
     lines = t.split("\n")
     if lines and re.match(
-        r"^(sure|okay|ok|certainly|of course|got it|here you go)\b.{0,30}:\s*$",
+        r"^(sure|okay|ok|certainly|of course|got it|here you go)[!.,]{0,3}:?\s*$",
         lines[0],
         re.IGNORECASE,
     ):
@@ -150,10 +154,15 @@ def clean_up(text: str) -> str:
     try:
         with urllib.request.urlopen(req) as resp:
             clean = strip_preamble(json.loads(resp.read())["response"])
-        # The model occasionally SHOUTS the whole thing back in caps. If it
-        # uppercased everything but the transcript wasn't, that's a mutation —
-        # fall back to the raw text rather than paste a shouted version.
-        if clean.isupper() and not text.isupper():
+        # If cleanup collapsed to nothing (e.g. the model returned only a
+        # preamble), don't paste an empty string — fall back to the raw text.
+        if not clean.strip():
+            log.warning("cleanup returned empty; falling back to raw text")
+            return text
+        # The model occasionally SHOUTS a whole phrase back in caps. Only revert
+        # for real multi-word input — a short token it correctly uppercases
+        # (e.g. "asap" -> "ASAP") should stand, not be reverted to lowercase.
+        if clean.isupper() and not text.isupper() and len(text.split()) > 2:
             log.warning("cleanup returned all-caps; falling back to raw text")
             return text
         return clean
@@ -300,8 +309,13 @@ def main():
             start()
 
     # macOS sometimes reports the right-option RELEASE as the generic alt key,
-    # which dropped the release and left it stuck recording. Accept any alt release.
-    ALT_RELEASES = {keyboard.Key.alt_r, keyboard.Key.alt, keyboard.Key.alt_gr}
+    # which dropped the release and left it stuck recording. Accept any alt
+    # release. Build defensively: not every pynput build defines every alt key.
+    ALT_RELEASES = {
+        getattr(keyboard.Key, name)
+        for name in ("alt_r", "alt", "alt_gr")
+        if hasattr(keyboard.Key, name)
+    }
 
     def on_release(key):
         if key in ALT_RELEASES and state["recording"]:
@@ -325,8 +339,9 @@ def main():
     log.info("listener started")
     with keyboard.Listener(on_press=on_press, on_release=on_release) as listener:
         listener.join()
-    mic.stop()
-    mic.close()
+    # Deliberately NOT calling mic.stop()/mic.close(): that PortAudio→CoreAudio
+    # teardown can hang on a wedged device (the same hang we avoid per-dictation).
+    # On process exit the OS reclaims the mic anyway.
 
 
 if __name__ == "__main__":
