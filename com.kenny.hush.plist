@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+    <key>Label</key>
+    <string>com.kenny.hush</string>
+
+    <key>ProgramArguments</key>
+    <array>
+        <string>/bin/bash</string>
+        <string>/Users/kendalladkins/Developer/hush/run-dictation.sh</string>
+    </array>
+
+    <!-- Start at login, and relaunch if it ever crashes. -->
+    <key>RunAtLoad</key>
+    <true/>
+    <key>KeepAlive</key>
+    <true/>
+
+    <!-- Interactive: it drives a global key tap + synthetic paste, so keep it
+         out of App Nap / background QoS throttling. -->
+    <key>ProcessType</key>
+    <string>Interactive</string>
+
+    <key>EnvironmentVariables</key>
+    <dict>
+        <key>PYTHONUNBUFFERED</key>
+        <string>1</string>
+        <!-- Model is already cached; skip HuggingFace's per-transcribe network
+             revision check → faster transcribe + genuinely offline. -->
+        <key>HF_HUB_OFFLINE</key>
+        <string>1</string>
+        <key>TOKENIZERS_PARALLELISM</key>
+        <string>false</string>
+    </dict>
+
+    <!-- App prints (raw/clean/status) and Python tracebacks go here. -->
+    <key>StandardOutPath</key>
+    <string>/Users/kendalladkins/Developer/hush/launchagent.out.log</string>
+    <key>StandardErrorPath</key>
+    <string>/Users/kendalladkins/Developer/hush/launchagent.err.log</string>
+</dict>
+</plist>

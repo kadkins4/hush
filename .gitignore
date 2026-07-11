@@ -1,0 +1,11 @@
+# Python
+.venv/
+__pycache__/
+*.pyc
+
+# Runtime logs (regenerated at runtime)
+*.log
+
+# Editor / OS cruft
+*.bak
+.DS_Store
