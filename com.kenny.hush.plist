@@ -5,10 +5,12 @@
     <key>Label</key>
     <string>com.kenny.hush</string>
 
+    <!-- Replace YOUR_USERNAME below with your macOS short username (run `whoami`).
+         launchd does not expand ~ or $HOME, so these must be absolute paths. -->
     <key>ProgramArguments</key>
     <array>
         <string>/bin/bash</string>
-        <string>/Users/kendalladkins/Developer/hush/run-dictation.sh</string>
+        <string>/Users/YOUR_USERNAME/Developer/hush/run-dictation.sh</string>
     </array>
 
     <!-- Start at login, and relaunch if it ever crashes. -->
@@ -36,8 +38,8 @@
 
     <!-- App prints (raw/clean/status) and Python tracebacks go here. -->
     <key>StandardOutPath</key>
-    <string>/Users/kendalladkins/Developer/hush/launchagent.out.log</string>
+    <string>/Users/YOUR_USERNAME/Developer/hush/launchagent.out.log</string>
     <key>StandardErrorPath</key>
-    <string>/Users/kendalladkins/Developer/hush/launchagent.err.log</string>
+    <string>/Users/YOUR_USERNAME/Developer/hush/launchagent.err.log</string>
 </dict>
 </plist>
