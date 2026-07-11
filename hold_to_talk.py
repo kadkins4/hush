@@ -37,10 +37,25 @@ MAX_RECORD_SECONDS = 120            # safety net: auto-stop a stuck recording. H
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 DEBUG_LOG = os.path.join(PROJECT_DIR, "hold_to_talk.log")
-OBSIDIAN_LOG = os.path.expanduser(
-    "~/Library/Mobile Documents/iCloud~md~obsidian/Documents/MainVault/"
-    "WeDev/Hush/Dictation Log.md"  # project home (app data), not the Learning track
-)
+
+
+def _obsidian_log_target():
+    """Optional markdown log of every raw→clean result. Kept OUT of the repo so
+    no personal path ships: set env HUSH_OBSIDIAN_LOG, or drop a path in a
+    gitignored `.obsidian_log_path` file next to this script. Returns None to
+    disable (the default for anyone who clones this)."""
+    env = os.environ.get("HUSH_OBSIDIAN_LOG", "").strip()
+    if env:
+        return os.path.expanduser(env)
+    try:
+        with open(os.path.join(PROJECT_DIR, ".obsidian_log_path")) as f:
+            path = f.read().strip()
+        return os.path.expanduser(path) if path else None
+    except OSError:
+        return None
+
+
+OBSIDIAN_LOG = _obsidian_log_target()
 
 # Faithful cleanup: fix mechanics, keep the user's words. Do NOT rewrite.
 # Hardened so the transcript can't hijack the model into ANSWERING it (e.g. a
@@ -134,7 +149,14 @@ def clean_up(text: str) -> str:
     )
     try:
         with urllib.request.urlopen(req) as resp:
-            return strip_preamble(json.loads(resp.read())["response"])
+            clean = strip_preamble(json.loads(resp.read())["response"])
+        # The model occasionally SHOUTS the whole thing back in caps. If it
+        # uppercased everything but the transcript wasn't, that's a mutation —
+        # fall back to the raw text rather than paste a shouted version.
+        if clean.isupper() and not text.isupper():
+            log.warning("cleanup returned all-caps; falling back to raw text")
+            return text
+        return clean
     except urllib.error.URLError as e:
         log.error("Ollama unreachable: %s", e)
         print("  Ollama not reachable — is `ollama serve` running? Using raw text.")
@@ -142,6 +164,8 @@ def clean_up(text: str) -> str:
 
 
 def log_to_obsidian(raw: str, clean: str) -> None:
+    if not OBSIDIAN_LOG:  # logging is opt-in (see _obsidian_log_target)
+        return
     stamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     entry = f"\n### {stamp}\n- **raw:** {raw}\n- **clean:** {clean}\n"
     try:

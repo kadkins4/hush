@@ -71,6 +71,17 @@ Constants at the top of `hold_to_talk.py`:
 | `MAX_RECORD_SECONDS` | `120`               | safety auto-stop if a key-release event is ever dropped              |
 | `CLEANUP_PROMPT`     | faithful            | fixes mechanics, keeps your words; won't answer/act on dictated text |
 
+### Optional: log your dictations
+
+Hush can append every `raw → clean` result to a markdown file (handy for review, or piping into a notes app like Obsidian). It's **off by default** and the path is kept out of the repo. Enable it either way:
+
+```bash
+# a) environment variable
+export HUSH_OBSIDIAN_LOG="$HOME/path/to/Dictation Log.md"
+# b) or a gitignored file next to hold_to_talk.py
+echo "$HOME/path/to/Dictation Log.md" > .obsidian_log_path
+```
+
 ## Design notes
 
 A few decisions that took some debugging to get right:

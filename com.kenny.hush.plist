@@ -34,6 +34,12 @@
         <string>1</string>
         <key>TOKENIZERS_PARALLELISM</key>
         <string>false</string>
+        <!-- Optional: log every raw→clean result to a markdown file. Uncomment
+             and set your own path (kept out of the repo). Or use a gitignored
+             `.obsidian_log_path` file next to hold_to_talk.py instead.
+        <key>HUSH_OBSIDIAN_LOG</key>
+        <string>/Users/YOUR_USERNAME/path/to/Dictation Log.md</string>
+        -->
     </dict>
 
     <!-- App prints (raw/clean/status) and Python tracebacks go here. -->
