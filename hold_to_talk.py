@@ -29,8 +29,8 @@ from datetime import datetime
 
 # --- Config ---
 WHISPER_MODEL = "mlx-community/whisper-small-mlx"
-LLM_MODEL = "llama3.2:3b"          # 3b keeps your wording. 1b trial (2026-07-10) failed: reworded meaning + leaked chatty preamble.
-KEEP_ALIVE = "30m"                  # stay warm through work sessions; ~50s cold reload only after long idle gaps
+LLM_MODEL = "llama3.2:1b"          # 1b re-trial (2026-07-13) held up: kept hedges (beat 3b), no preamble leak. Only wart is occasional ALL-CAPS, caught by the isupper() fallback in clean_up(). ~1GB lighter than 3b.
+KEEP_ALIVE = "60s"                  # resident only in bursts + 60s tail, not all day; ~4s cold reload after idle gaps
 OLLAMA_URL = "http://localhost:11434/api/generate"
 SAMPLE_RATE = 16000                 # what Whisper wants
 MAX_RECORD_SECONDS = 120            # safety net: auto-stop a stuck recording. High enough not to cut off real speech.
